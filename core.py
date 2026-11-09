@@ -423,8 +423,10 @@ def force_terminate(pid: int, pname: str = "", exe: str = ""):
     rc, out = _run([_sys_tool("taskkill.exe"), "/PID", str(pid), "/F"])
     if rc == 0:
         return True, "已强制结束（taskkill /F）"
-    return False, "强制结束失败：%s%s" % (
-        out.strip()[:200], "（可尝试以管理员身份运行）" if not is_admin() else "")
+    hint = ("\n\n排障：请关闭本程序，右键 start.bat →「以管理员身份运行」后重试。"
+            "普通权限下 Windows 会拒绝终止部分系统进程和由其他账户启动的服务，"
+            "这是已验证有效的解决方法。") if not is_admin() else ""
+    return False, "强制结束失败：%s%s" % (out.strip()[:200], hint)
 
 
 # --------------------------------------------------------------------------

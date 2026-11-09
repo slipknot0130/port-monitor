@@ -392,7 +392,8 @@ class PortMonitorApp:
     def _update_status(self):
         listening = sum(1 for e in self.entries.values() if e.state == "LISTEN")
         stamp = self.last_refresh.strftime("%H:%M:%S") if self.last_refresh else "-"
-        admin = "管理员权限" if core.is_admin() else "普通权限（部分系统进程需管理员才能结束）"
+        admin = ("管理员权限" if core.is_admin() else
+                 "普通权限 · 结束失败请右键 start.bat 以管理员身份运行")
         extra = (" | " + self.released_hint) if self.released_hint else ""
         self.status_var.set(
             "共 %d 条连接，其中监听 %d 个 | 当前显示 %d 行 | 本次新增 %d / 释放 %d | "
@@ -560,9 +561,11 @@ class PortMonitorApp:
             return
 
         core.log_action("GRACEFUL_FAIL", e, "失败", msg)
+        admin_hint = ("\n\n提示：若强制结束仍失败，请关闭本程序后右键 start.bat "
+                      "→「以管理员身份运行」再试一次。") if not core.is_admin() else ""
         force = messagebox.askyesno("温和关闭未生效",
-            "%s\n\n目标：%s (PID %s)\n\n是否强制结束？强制结束可能使该进程丢失未保存的数据。" % (
-                msg, e.pname or "-", e.pid), parent=self.root)
+            "%s\n\n目标：%s (PID %s)\n\n是否强制结束？强制结束可能使该进程丢失未保存的数据。%s" % (
+                msg, e.pname or "-", e.pid, admin_hint), parent=self.root)
         if not force:
             core.log_action("FORCE_CANCEL", e, "用户取消强制")
             return
